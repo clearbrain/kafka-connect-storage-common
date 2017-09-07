@@ -23,6 +23,9 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -63,7 +66,18 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
           log.error("Type {} is not supported as a partition key.", type.getName());
           throw new PartitionException("Error encoding partition.");
       }
+    } else if (value instanceof HashMap) {
+      HashMap<?, ?> hashMap = (HashMap<?, ?>) value;
+      List<String> partitionKeys = Arrays.asList(fieldName.split(","));
+      String partitionStr = "";
+      for (String key : partitionKeys) {
+        partitionStr += key + "=" + (String) hashMap.get(key) + "/";
+      }
+
+      return partitionStr.substring(0, partitionStr.length() - 1);
+      // throw new PartitionException("Error encoding partition.");
     } else {
+      // log.error((String) ((HashMap) value).get(fieldName));
       log.error("Value is not Struct type.");
       throw new PartitionException("Error encoding partition.");
     }
